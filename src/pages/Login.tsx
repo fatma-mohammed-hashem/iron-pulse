@@ -48,16 +48,21 @@ const Login = () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     
     // TODO: Backend integration - authenticate via API
-    const success = login(email, password);
+    const result = login(email, password);
     
-    if (success) {
+    if (result.success) {
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
-      // Redirect based on subscription status
-      // Note: isSubscribed might not update immediately, so we check after login
-      navigate("/");
+      
+      // Role-based redirect
+      // Admin → Admin Dashboard, User → Landing Page
+      if (result.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } else {
       toast({
         title: "Login failed",
@@ -162,9 +167,12 @@ const Login = () => {
         </div>
 
         {/* Demo Credentials */}
-        <div className="mt-6 p-4 rounded-lg bg-secondary/50 border border-border">
+        <div className="mt-6 p-4 rounded-lg bg-secondary/50 border border-border space-y-2">
           <p className="text-sm text-muted-foreground text-center">
-            <strong>Demo:</strong> Register a new account to test the flow
+            <strong>Admin:</strong> admin@ironpulse.com / admin123
+          </p>
+          <p className="text-sm text-muted-foreground text-center">
+            <strong>User:</strong> Register a new account to test the flow
           </p>
         </div>
       </div>

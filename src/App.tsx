@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { UserProvider } from "@/contexts/UserContext";
 import { PlansProvider } from "@/contexts/PlansContext";
 import { AdminProvider } from "@/contexts/AdminContext";
+import ProtectedAdminRoute from "@/components/auth/ProtectedAdminRoute";
 
 // Public pages
 import LandingPage from "./pages/LandingPage";
@@ -46,15 +47,15 @@ const App = () => (
                 <Route path="/subscribe/:id" element={<Subscribe />} />
                 <Route path="/user-dashboard" element={<UserDashboard />} />
                 
-                {/* Admin Routes */}
-                <Route path="/admin" element={<Dashboard />} />
-                <Route path="/members" element={<Members />} />
-                <Route path="/trainers" element={<Trainers />} />
-                <Route path="/plans" element={<Plans />} />
-                <Route path="/sessions" element={<Sessions />} />
-                <Route path="/bookings" element={<Bookings />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/settings" element={<Settings />} />
+                {/* Admin Routes - Protected, only accessible by admin users */}
+                <Route path="/admin" element={<ProtectedAdminRoute><Dashboard /></ProtectedAdminRoute>} />
+                <Route path="/members" element={<ProtectedAdminRoute><Members /></ProtectedAdminRoute>} />
+                <Route path="/trainers" element={<ProtectedAdminRoute><Trainers /></ProtectedAdminRoute>} />
+                <Route path="/plans" element={<ProtectedAdminRoute><Plans /></ProtectedAdminRoute>} />
+                <Route path="/sessions" element={<ProtectedAdminRoute><Sessions /></ProtectedAdminRoute>} />
+                <Route path="/bookings" element={<ProtectedAdminRoute><Bookings /></ProtectedAdminRoute>} />
+                <Route path="/reports" element={<ProtectedAdminRoute><Reports /></ProtectedAdminRoute>} />
+                <Route path="/settings" element={<ProtectedAdminRoute><Settings /></ProtectedAdminRoute>} />
                 
                 {/* Catch-all */}
                 <Route path="*" element={<NotFound />} />

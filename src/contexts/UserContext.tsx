@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 // Types
+export type UserRole = "user" | "admin";
+
 export interface User {
   id: string;
   email: string;
   name: string;
   avatar?: string;
+  role: UserRole;
 }
 
 export interface Subscription {
@@ -34,7 +37,8 @@ interface UserContextType {
   subscription: Subscription | null;
   isLoggedIn: boolean;
   isSubscribed: boolean;
-  login: (email: string, password: string) => boolean;
+  isAdmin: boolean;
+  login: (email: string, password: string) => { success: boolean; role: UserRole };
   register: (email: string, password: string, name: string) => boolean;
   logout: () => void;
   subscribe: (subscriptionData: Omit<Subscription, "id" | "status">) => void;
@@ -80,9 +84,28 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [subscription]);
 
-  const login = (email: string, password: string): boolean => {
-    // TODO: Backend integration - validate credentials via API
-    // Mock login - check if user exists in localStorage or create session
+  // Hardcoded admin account for demo purposes
+  // TODO: Backend integration - validate credentials via API with proper role checking
+  const ADMIN_CREDENTIALS = {
+    email: "admin@ironpulse.com",
+    password: "admin123",
+    name: "Admin User",
+  };
+
+  const login = (email: string, password: string): { success: boolean; role: UserRole } => {
+    // Check for admin login first
+    if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+      const adminUser: User = {
+        id: "admin_1",
+        email: ADMIN_CREDENTIALS.email,
+        name: ADMIN_CREDENTIALS.name,
+        role: "admin",
+      };
+      setUser(adminUser);
+      return { success: true, role: "admin" };
+    }
+
+    // Regular user login
     const existingUsers = JSON.parse(localStorage.getItem("ironpulse_users") || "[]");
     const foundUser = existingUsers.find((u: any) => u.email === email);
     
@@ -92,6 +115,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         email: foundUser.email,
         name: foundUser.name,
         avatar: foundUser.avatar,
+        role: "user",
       };
       setUser(userData);
       
@@ -100,9 +124,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       if (userSubscription) {
         setSubscription(JSON.parse(userSubscription));
       }
-      return true;
+      return { success: true, role: "user" };
     }
-    return false;
+    return { success: false, role: "user" };
   };
 
   const register = (email: string, password: string, name: string): boolean => {
@@ -120,6 +144,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       password, // In real app, this would be hashed
       name,
       avatar: undefined,
+      role: "user" as UserRole,
     };
     
     existingUsers.push(newUser);
@@ -130,6 +155,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       id: newUser.id,
       email: newUser.email,
       name: newUser.name,
+      role: "user",
     };
     setUser(userData);
     
@@ -166,6 +192,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         subscription,
         isLoggedIn: !!user,
         isSubscribed: !!subscription && subscription.status === "active",
+        isAdmin: user?.role === "admin",
         login,
         register,
         logout,
