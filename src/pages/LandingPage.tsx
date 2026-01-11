@@ -450,9 +450,12 @@ const LandingPage = () => {
             © 2024 Iron Pulse Gym. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <Link to="/admin" className="text-sm text-muted-foreground hover:text-foreground">
-              Admin Portal
-            </Link>
+            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground">
+              Features
+            </a>
+            <a href="#plans" className="text-sm text-muted-foreground hover:text-foreground">
+              Plans
+            </a>
           </div>
         </div>
       </footer>
