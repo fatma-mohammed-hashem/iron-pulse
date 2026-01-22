@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { api } from "@/api/axios";
+import { useState, useEffect } from "react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+} from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,89 +20,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const bookings = [
-  {
-    id: 1,
-    member: {
-      name: "Sarah Johnson",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-    },
-    session: "Morning Yoga Flow",
-    trainer: "Alexandra Kim",
-    date: "Dec 27, 2024",
-    time: "06:00 AM",
-    location: "Studio A",
-    attendance: "attended" as const,
-  },
-  {
-    id: 2,
-    member: {
-      name: "Michael Chen",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
-    },
-    session: "HIIT Blast",
-    trainer: "Marcus Williams",
-    date: "Dec 27, 2024",
-    time: "08:00 AM",
-    location: "Main Floor",
-    attendance: "pending" as const,
-  },
-  {
-    id: 3,
-    member: {
-      name: "Emily Rodriguez",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
-    },
-    session: "Strength & Conditioning",
-    trainer: "Marcus Williams",
-    date: "Dec 27, 2024",
-    time: "10:00 AM",
-    location: "Weight Room",
-    attendance: "pending" as const,
-  },
-  {
-    id: 4,
-    member: {
-      name: "David Park",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
-    },
-    session: "Spin Class",
-    trainer: "Sophia Lee",
-    date: "Dec 26, 2024",
-    time: "12:00 PM",
-    location: "Spin Room",
-    attendance: "attended" as const,
-  },
-  {
-    id: 5,
-    member: {
-      name: "Jessica Williams",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop",
-    },
-    session: "Zumba Party",
-    trainer: "Emma Rodriguez",
-    date: "Dec 26, 2024",
-    time: "05:00 PM",
-    location: "Studio B",
-    attendance: "missed" as const,
-  },
-  {
-    id: 6,
-    member: {
-      name: "Ryan Thompson",
-      avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop",
-    },
-    session: "Boxing Fundamentals",
-    trainer: "Jordan Mitchell",
-    date: "Dec 25, 2024",
-    time: "07:00 PM",
-    location: "Combat Zone",
-    attendance: "attended" as const,
-  },
-];
-
 const Bookings = () => {
+  const [bookings, setBookings] = useState([]);
+
+  useEffect(() => {
+    api
+      .get("/bookings")
+      .then((res) => setBookings(res.data))
+      .catch(() => setBookings([]));
+  }, []);
+
   const getAttendanceIcon = (attendance: string) => {
     switch (attendance) {
       case "attended":
@@ -134,7 +69,10 @@ const Bookings = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="stat-card card-glow opacity-0 animate-fade-in" style={{ animationDelay: "100ms" }}>
+        <div
+          className="stat-card card-glow opacity-0 animate-fade-in"
+          style={{ animationDelay: "100ms" }}
+        >
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-success/20">
               <CheckCircle className="w-6 h-6 text-success" />
@@ -145,7 +83,10 @@ const Bookings = () => {
             </div>
           </div>
         </div>
-        <div className="stat-card card-glow opacity-0 animate-fade-in" style={{ animationDelay: "200ms" }}>
+        <div
+          className="stat-card card-glow opacity-0 animate-fade-in"
+          style={{ animationDelay: "200ms" }}
+        >
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-warning/20">
               <AlertCircle className="w-6 h-6 text-warning" />
@@ -156,7 +97,10 @@ const Bookings = () => {
             </div>
           </div>
         </div>
-        <div className="stat-card card-glow opacity-0 animate-fade-in" style={{ animationDelay: "300ms" }}>
+        <div
+          className="stat-card card-glow opacity-0 animate-fade-in"
+          style={{ animationDelay: "300ms" }}
+        >
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-destructive/20">
               <XCircle className="w-6 h-6 text-destructive" />
@@ -170,7 +114,11 @@ const Bookings = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="all" className="opacity-0 animate-fade-in" style={{ animationDelay: "400ms" }}>
+      <Tabs
+        defaultValue="all"
+        className="opacity-0 animate-fade-in"
+        style={{ animationDelay: "400ms" }}
+      >
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <TabsList className="bg-secondary">
             <TabsTrigger value="all">All Bookings</TabsTrigger>
@@ -256,8 +204,12 @@ const Bookings = () => {
                       </td>
                       <td className="py-4 px-4">
                         <div>
-                          <p className="font-medium text-foreground">{booking.session}</p>
-                          <p className="text-sm text-muted-foreground">{booking.trainer}</p>
+                          <p className="font-medium text-foreground">
+                            {booking.session}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {booking.trainer}
+                          </p>
                         </div>
                       </td>
                       <td className="py-4 px-4">
@@ -281,7 +233,9 @@ const Bookings = () => {
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
                           {getAttendanceIcon(booking.attendance)}
-                          <StatusBadge variant={getAttendanceStatus(booking.attendance)}>
+                          <StatusBadge
+                            variant={getAttendanceStatus(booking.attendance)}
+                          >
                             {booking.attendance.charAt(0).toUpperCase() +
                               booking.attendance.slice(1)}
                           </StatusBadge>
@@ -308,7 +262,11 @@ const Bookings = () => {
                             </>
                           )}
                           {booking.attendance !== "pending" && (
-                            <Button size="sm" variant="outline" className="h-8 px-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-3"
+                            >
                               View Details
                             </Button>
                           )}
@@ -324,19 +282,25 @@ const Bookings = () => {
 
         <TabsContent value="today">
           <div className="stat-card card-glow text-center py-12">
-            <p className="text-muted-foreground">Today's bookings will appear here</p>
+            <p className="text-muted-foreground">
+              Today's bookings will appear here
+            </p>
           </div>
         </TabsContent>
 
         <TabsContent value="upcoming">
           <div className="stat-card card-glow text-center py-12">
-            <p className="text-muted-foreground">Upcoming bookings will appear here</p>
+            <p className="text-muted-foreground">
+              Upcoming bookings will appear here
+            </p>
           </div>
         </TabsContent>
 
         <TabsContent value="past">
           <div className="stat-card card-glow text-center py-12">
-            <p className="text-muted-foreground">Past bookings will appear here</p>
+            <p className="text-muted-foreground">
+              Past bookings will appear here
+            </p>
           </div>
         </TabsContent>
       </Tabs>

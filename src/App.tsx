@@ -48,17 +48,73 @@ const App = () => (
                 <Route path="/subscribe/:id" element={<Subscribe />} />
                 <Route path="/user-dashboard" element={<UserDashboard />} />
                 <Route path="/profile" element={<Profile />} />
-                
+
                 {/* Admin Routes - Protected, only accessible by admin users */}
-                <Route path="/admin" element={<ProtectedAdminRoute><Dashboard /></ProtectedAdminRoute>} />
-                <Route path="/members" element={<ProtectedAdminRoute><Members /></ProtectedAdminRoute>} />
-                <Route path="/trainers" element={<ProtectedAdminRoute><Trainers /></ProtectedAdminRoute>} />
-                <Route path="/plans" element={<ProtectedAdminRoute><Plans /></ProtectedAdminRoute>} />
-                <Route path="/sessions" element={<ProtectedAdminRoute><Sessions /></ProtectedAdminRoute>} />
-                <Route path="/bookings" element={<ProtectedAdminRoute><Bookings /></ProtectedAdminRoute>} />
-                <Route path="/reports" element={<ProtectedAdminRoute><Reports /></ProtectedAdminRoute>} />
-                <Route path="/settings" element={<ProtectedAdminRoute><Settings /></ProtectedAdminRoute>} />
-                
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedAdminRoute>
+                      <Dashboard />
+                    </ProtectedAdminRoute>
+                  }
+                />
+                <Route
+                  path="/members"
+                  element={
+                    <ProtectedAdminRoute>
+                      <Members />
+                    </ProtectedAdminRoute>
+                  }
+                />
+                <Route
+                  path="/trainers"
+                  element={
+                    <ProtectedAdminRoute>
+                      <Trainers />
+                    </ProtectedAdminRoute>
+                  }
+                />
+                <Route
+                  path="/plans"
+                  element={
+                    <ProtectedAdminRoute>
+                      <Plans />
+                    </ProtectedAdminRoute>
+                  }
+                />
+                <Route
+                  path="/sessions"
+                  element={
+                    <ProtectedAdminRoute>
+                      <Sessions />
+                    </ProtectedAdminRoute>
+                  }
+                />
+                <Route
+                  path="/bookings"
+                  element={
+                    <ProtectedAdminRoute>
+                      <Bookings />
+                    </ProtectedAdminRoute>
+                  }
+                />
+                <Route
+                  path="/reports"
+                  element={
+                    <ProtectedAdminRoute>
+                      <Reports />
+                    </ProtectedAdminRoute>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <ProtectedAdminRoute>
+                      <Settings />
+                    </ProtectedAdminRoute>
+                  }
+                />
+
                 {/* Catch-all */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

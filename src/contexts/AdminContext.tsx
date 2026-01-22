@@ -1,37 +1,27 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, ReactNode } from "react";
+import { useUser } from "@/contexts/UserContext";
 
 interface AdminProfile {
-  firstName: string;
-  lastName: string;
+  id: number;
+  name: string;
   email: string;
   role: string;
-  avatar: string;
 }
 
 interface AdminContextType {
-  profile: AdminProfile;
-  updateProfile: (updates: Partial<AdminProfile>) => void;
+  profile: AdminProfile | null;
 }
-
-const defaultProfile: AdminProfile = {
-  firstName: "John",
-  lastName: "Smith",
-  email: "john.smith@ironpulsegym.com",
-  role: "Super Admin",
-  avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
-};
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<AdminProfile>(defaultProfile);
+  const { user } = useUser();
 
-  const updateProfile = (updates: Partial<AdminProfile>) => {
-    setProfile((prev) => ({ ...prev, ...updates }));
-  };
+  // لو اليوزر موجود ودوره admin حط البيانات، لو لا خلي profile null
+  const profile = user?.role === "admin" ? user : null;
 
   return (
-    <AdminContext.Provider value={{ profile, updateProfile }}>
+    <AdminContext.Provider value={{ profile }}>
       {children}
     </AdminContext.Provider>
   );
@@ -39,8 +29,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
 export function useAdmin() {
   const context = useContext(AdminContext);
-  if (!context) {
-    throw new Error("useAdmin must be used within an AdminProvider");
-  }
+  if (!context) throw new Error("useAdmin must be used within AdminProvider");
   return context;
 }

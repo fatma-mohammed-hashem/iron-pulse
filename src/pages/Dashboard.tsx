@@ -1,11 +1,29 @@
-import { Users, Dumbbell, Calendar, CreditCard, TrendingUp, Activity } from "lucide-react";
+// src/pages/Dashboard.tsx
+import { useAdmin } from "@/contexts/AdminContext";
+import { Link, Navigate } from "react-router-dom";
+import {
+  Users,
+  Dumbbell,
+  Calendar,
+  CreditCard,
+  TrendingUp,
+  Activity,
+} from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { MembershipChart } from "@/components/dashboard/MembershipChart";
 import { SessionsOverview } from "@/components/dashboard/SessionsOverview";
 import { RecentActivities } from "@/components/dashboard/RecentActivities";
+import path from "path";
 
 const Dashboard = () => {
+  const { profile } = useAdmin();
+
+  // لو مش موجود أو مش ادمن، اعمل redirect
+  if (!profile) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <DashboardLayout>
       {/* Page Header */}
@@ -81,18 +99,40 @@ const Dashboard = () => {
       {/* Recent Activities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RecentActivities />
-        
+
         {/* Quick Actions */}
         <div className="stat-card card-glow">
-          <h3 className="text-lg font-semibold text-foreground mb-6">Quick Actions</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-6">
+            Quick Actions
+          </h3>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { icon: Users, label: "Add Member", color: "bg-primary/20 text-primary" },
-              { icon: Dumbbell, label: "Add Trainer", color: "bg-info/20 text-info" },
-              { icon: Calendar, label: "Create Session", color: "bg-warning/20 text-warning" },
-              { icon: CreditCard, label: "New Plan", color: "bg-success/20 text-success" },
+              {
+                icon: Users,
+                label: "Add Member",
+                path: "/members",
+                color: "bg-primary/20 text-primary",
+              },
+              {
+                icon: Dumbbell,
+                label: "Add Trainer",
+                path: "/trainers",
+                color: "bg-info/20 text-info",
+              },
+              {
+                icon: Calendar,
+                label: "Create Session",
+                color: "bg-warning/20 text-warning",
+              },
+              {
+                icon: CreditCard,
+                label: "New Plan",
+                path: "plans",
+                color: "bg-success/20 text-success",
+              },
             ].map((action, index) => (
-              <button
+              <Link
+                to={action.path}
                 key={action.label}
                 className="flex flex-col items-center gap-3 p-6 rounded-xl bg-secondary/50 hover:bg-secondary transition-all hover:scale-105 opacity-0 animate-fade-in"
                 style={{ animationDelay: `${(index + 1) * 150}ms` }}
@@ -100,8 +140,10 @@ const Dashboard = () => {
                 <div className={`p-4 rounded-xl ${action.color}`}>
                   <action.icon className="w-6 h-6" />
                 </div>
-                <span className="text-sm font-medium text-foreground">{action.label}</span>
-              </button>
+                <span className="text-sm font-medium text-foreground">
+                  {action.label}
+                </span>
+              </Link>
             ))}
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { api } from "@/api/axios";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Dumbbell,
@@ -18,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePlans } from "@/contexts/PlansContext";
 import { useUser } from "@/contexts/UserContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,18 +32,27 @@ import { LogoutConfirmModal } from "@/components/modals/LogoutConfirmModal";
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { plans } = usePlans();
+  const [plans, setPlans] = useState([]);
+  // const { plans } = usePlans();
   const { user, isLoggedIn, isSubscribed, isAdmin, logout } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const activePlans = plans.filter((plan) => plan.status === "active");
+  // const activePlans = plans.filter((plan) => plan.status === "active");
 
   const handleLogout = () => {
     logout();
     setShowLogoutModal(false);
     navigate("/");
   };
+
+  // API
+  useEffect(() => {
+    api
+      .get("/plans")
+      .then((res) => setPlans(res.data))
+      .catch(() => setPlans([]));
+  }, []);
 
   const getInitials = (name: string) => {
     return name
@@ -144,7 +154,7 @@ const LandingPage = () => {
                       className="flex items-center gap-2 p-1 pr-3"
                     >
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                        {/* <AvatarImage src={user?.avatar} alt={user?.name} /> */}
                         <AvatarFallback className="bg-primary/20 text-primary text-sm">
                           {getInitials(user?.name || "U")}
                         </AvatarFallback>
@@ -261,7 +271,7 @@ const LandingPage = () => {
                   <>
                     <div className="flex items-center gap-3 py-2">
                       <Avatar className="w-10 h-10">
-                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                        {/* <AvatarImage src={user?.avatar} alt={user?.name} /> */}
                         <AvatarFallback className="bg-primary/20 text-primary">
                           {getInitials(user?.name || "U")}
                         </AvatarFallback>
@@ -566,12 +576,10 @@ const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {activePlans.map((plan) => (
+            {plans.map((plan) => (
               <article
                 key={plan.id}
-                className={`relative rounded-2xl border border-border bg-background p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl ${
-                  plan.popular ? "ring-2 ring-primary scale-[1.03]" : ""
-                }`}
+                className={`relative rounded-2xl border border-border bg-background p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl`}
                 aria-label={`${plan.name} plan`}
               >
                 {/* Popular Badge */}
@@ -646,7 +654,7 @@ const LandingPage = () => {
           </div>
 
           {/* Empty State */}
-          {activePlans.length === 0 && (
+          {plans.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
                 No plans available at the moment.

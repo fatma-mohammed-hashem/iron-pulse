@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Plus, Check, X, Edit, MoreVertical, Users, Zap, Trash2, Star } from "lucide-react";
+import {
+  Plus,
+  Check,
+  X,
+  Edit,
+  MoreVertical,
+  Users,
+  Zap,
+  Trash2,
+  Star,
+} from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -35,8 +45,8 @@ const defaultFeatures: PlanFeature[] = [
 ];
 
 const Plans = () => {
-  // Use shared PlansContext for real-time sync with Landing Page
-  const { plans, addPlan, updatePlan, deletePlan, togglePlanStatus } = usePlans();
+  const { plans, addPlan, updatePlan, deletePlan, togglePlanStatus } =
+    usePlans();
   const { toast } = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -44,7 +54,9 @@ const Plans = () => {
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [deletingPlan, setDeletingPlan] = useState<Plan | null>(null);
 
-  const [formData, setFormData] = useState({
+  type Period = "month" | "year";
+
+  const [formData, setFormData] = useState<Omit<Plan, "id" | "activeMembers">>({
     name: "",
     price: 0,
     period: "month",
@@ -52,6 +64,7 @@ const Plans = () => {
     description: "",
     features: defaultFeatures.map((f) => ({ ...f })),
     popular: false,
+    is_active: true,
   });
 
   const resetForm = () => {
@@ -63,6 +76,7 @@ const Plans = () => {
       description: "",
       features: defaultFeatures.map((f) => ({ ...f, included: false })),
       popular: false,
+      is_active: true,
     });
     setEditingPlan(null);
   };
@@ -79,14 +93,38 @@ const Plans = () => {
       price: plan.price,
       period: plan.period,
       duration: plan.duration,
-      description: plan.description,
+      description: plan.description || "",
       features: plan.features.map((f) => ({ ...f })),
       popular: plan.popular,
+      is_active: plan.is_active,
     });
     setIsFormOpen(true);
   };
 
-  const handleSubmit = () => {
+  const handleFeatureToggle = (index: number) => {
+    const newFeatures = [...formData.features];
+    newFeatures[index].included = !newFeatures[index].included;
+    setFormData({ ...formData, features: newFeatures });
+  };
+
+  const handleToggleStatus = async (plan: Plan) => {
+    try {
+      const newStatus = !plan.is_active;
+      await togglePlanStatus(plan.id, newStatus);
+      toast({
+        title: "Status Updated",
+        description: `${plan.name} is now ${newStatus ? "Active" : "Inactive"}`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Could not update status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!formData.name || formData.price <= 0) {
       toast({
         title: "Validation Error",
@@ -96,63 +134,50 @@ const Plans = () => {
       return;
     }
 
-    if (editingPlan) {
-      // TODO: Backend integration - update plan via API
-      updatePlan(editingPlan.id, {
-        ...formData,
-        status: editingPlan.status,
-        activeMembers: editingPlan.activeMembers,
-      });
+    try {
+      if (editingPlan) {
+        await updatePlan(editingPlan.id, formData);
+        toast({
+          title: "Plan Updated",
+          description: `${formData.name} plan has been updated successfully.`,
+        });
+      } else {
+        await addPlan(formData);
+        toast({
+          title: "Plan Created",
+          description: `${formData.name} plan has been created successfully.`,
+        });
+      }
+
+      setIsFormOpen(false);
+      resetForm();
+    } catch (err: any) {
       toast({
-        title: "Plan Updated",
-        description: `${formData.name} plan has been updated successfully.`,
-      });
-    } else {
-      // TODO: Backend integration - create plan via API
-      addPlan({
-        ...formData,
-        status: "active",
-        activeMembers: 0,
-      });
-      toast({
-        title: "Plan Created",
-        description: `${formData.name} plan has been created and is now visible on the landing page.`,
+        title: "Error",
+        description: err.response?.data?.message || "Something went wrong",
+        variant: "destructive",
       });
     }
-
-    setIsFormOpen(false);
-    resetForm();
   };
 
-  const handleDelete = () => {
-    if (deletingPlan) {
-      // TODO: Backend integration - delete plan via API
-      deletePlan(deletingPlan.id);
+  const handleDelete = async () => {
+    if (!deletingPlan) return;
+
+    try {
+      await deletePlan(deletingPlan.id);
       toast({
         title: "Plan Deleted",
-        description: `${deletingPlan.name} plan has been removed from the landing page.`,
+        description: `${deletingPlan.name} plan has been removed.`,
       });
       setIsDeleteOpen(false);
       setDeletingPlan(null);
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
     }
-  };
-
-  const handleFeatureToggle = (index: number) => {
-    const newFeatures = [...formData.features];
-    newFeatures[index].included = !newFeatures[index].included;
-    setFormData({ ...formData, features: newFeatures });
-  };
-
-  const handleToggleStatus = (plan: Plan) => {
-    togglePlanStatus(plan.id);
-    toast({
-      title: "Status Updated",
-      description: `${plan.name} is now ${plan.status === "active" ? "inactive" : "active"}. ${
-        plan.status === "active" 
-          ? "It will no longer appear on the landing page." 
-          : "It is now visible on the landing page."
-      }`,
-    });
   };
 
   return (
@@ -160,12 +185,14 @@ const Plans = () => {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 opacity-0 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Membership Plans</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            Membership Plans
+          </h1>
           <p className="text-muted-foreground mt-1">
             Create and manage membership plans for your gym
           </p>
         </div>
-        <Button 
+        <Button
           onClick={openAddForm}
           className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
         >
@@ -181,7 +208,7 @@ const Plans = () => {
             key={plan.id}
             className={`stat-card card-glow relative opacity-0 animate-fade-in ${
               plan.popular ? "ring-2 ring-primary" : ""
-            } ${plan.status === "inactive" ? "opacity-60" : ""}`}
+            } ${!plan.is_active ? "opacity-60" : ""}`}
             style={{ animationDelay: `${(index + 1) * 100}ms` }}
           >
             {plan.popular && (
@@ -195,8 +222,12 @@ const Plans = () => {
 
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
+                <h3 className="text-xl font-bold text-foreground">
+                  {plan.name}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {plan.description}
+                </p>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -213,7 +244,7 @@ const Plans = () => {
                     <Users className="w-4 h-4 mr-2" />
                     View Members
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => {
                       setDeletingPlan(plan);
                       setIsDeleteOpen(true);
@@ -229,7 +260,9 @@ const Plans = () => {
 
             <div className="mb-6">
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-foreground glow-text">${plan.price}</span>
+                <span className="text-4xl font-bold text-foreground glow-text">
+                  ${plan.price}
+                </span>
                 <span className="text-muted-foreground">/{plan.period}</span>
               </div>
             </div>
@@ -248,7 +281,9 @@ const Plans = () => {
                   )}
                   <span
                     className={`text-sm ${
-                      feature.included ? "text-foreground" : "text-muted-foreground"
+                      feature.included
+                        ? "text-foreground"
+                        : "text-muted-foreground"
                     }`}
                   >
                     {feature.name}
@@ -261,17 +296,19 @@ const Plans = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Users className="w-4 h-4" />
-                  <span>{plan.activeMembers} members</span>
+                  <span>{plan.activeMembers || 0} members</span>
                 </div>
-                <StatusBadge variant={plan.status === "active" ? "active" : "inactive"}>
-                  {plan.status === "active" ? "Active" : "Inactive"}
+                <StatusBadge variant={plan.is_active ? "active" : "inactive"}>
+                  {plan.is_active ? "Active" : "Inactive"}
                 </StatusBadge>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Plan Status</span>
+                <span className="text-sm text-muted-foreground">
+                  Plan Status
+                </span>
                 <Switch
-                  checked={plan.status === "active"}
+                  checked={plan.is_active}
                   onCheckedChange={() => handleToggleStatus(plan)}
                 />
               </div>
@@ -319,7 +356,7 @@ const Plans = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="duration">Duration (months)</Label>
+                <Label htmlFor="duration">Duration</Label>
                 <Input
                   id="duration"
                   type="number"
@@ -333,6 +370,22 @@ const Plans = () => {
                   }
                 />
               </div>
+            </div>
+
+            {/* 🔹 Period select */}
+            <div className="space-y-2">
+              <Label htmlFor="period">Period</Label>
+              <select
+                id="period"
+                value={formData.period}
+                onChange={(e) =>
+                  setFormData({ ...formData, period: e.target.value as Period })
+                }
+                className="border border-border rounded-md p-2 w-full"
+              >
+                <option value="month">Month</option>
+                <option value="year">Year</option>
+              </select>
             </div>
 
             <div className="space-y-2">

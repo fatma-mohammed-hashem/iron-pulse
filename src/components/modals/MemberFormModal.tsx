@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import {api} from '@/api/axios';
 import {
   Dialog,
   DialogContent,
@@ -23,11 +24,22 @@ export interface MemberData {
   name: string;
   email: string;
   phone: string;
-  plan: string;
-  status: "active" | "expired" | "pending";
-  joinDate: string;
-  avatar: string;
+  gender?: string;
+  date_of_birth?: string;
+  photo?: string;
+  height?: number;
+  weight?: number;
+  blood_type?: string;
+  note?: string;
+  join_date?: string;
+  plan?: string;
+  address?: {
+    city?: string;
+    street?: string;
+    building_num?: string;
+  };
 }
+
 
 interface MemberFormModalProps {
   open: boolean;

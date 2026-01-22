@@ -18,15 +18,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export interface SessionData {
+export interface Trainer {
   id: number;
   name: string;
-  trainer: string;
+  photo: string;
+}
+
+export interface SessionData {
+  id: number;
+  description: string;
+  trainer_name: string;
   trainerAvatar: string;
-  category: string;
+  category_name: string;
   time: string;
   date: string;
-  location: string;
   capacity: number;
   booked: number;
   status: "upcoming" | "full" | "available";
@@ -36,32 +41,30 @@ interface SessionFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   session?: SessionData | null;
+  trainers: Trainer[];
   onSave: (session: SessionData) => void;
 }
 
-const trainers = [
-  { name: "Marcus Williams", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop" },
-  { name: "Alexandra Kim", avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop" },
-  { name: "Jordan Mitchell", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" },
-  { name: "Emma Rodriguez", avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop" },
-  { name: "Sophia Lee", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" },
-];
-
 const categories = ["Yoga", "HIIT", "Strength", "Cardio", "Dance", "Boxing", "Spinning", "Pilates"];
-const locations = ["Studio A", "Studio B", "Main Floor", "Weight Room", "Spin Room", "Combat Zone"];
 
-export function SessionFormModal({ open, onOpenChange, session, onSave }: SessionFormModalProps) {
+export function SessionFormModal({
+  open,
+  onOpenChange,
+  session,
+  trainers,
+  onSave,
+}: SessionFormModalProps) {
   const [formData, setFormData] = useState({
-    name: "",
-    trainer: trainers[0].name,
-    category: "Yoga",
+    description: "",
+    trainer_name: "",
+    category_name: "Yoga",
     startTime: "09:00",
     endTime: "10:00",
-    location: "Studio A",
     capacity: 20,
   });
 
   useEffect(() => {
+    const firstTrainer = trainers.length > 0 ? trainers[0].name : "";
     if (session) {
       const [startTime, endTime] = session.time.split(" - ").map((t) => {
         const [time, period] = t.split(" ");
@@ -71,27 +74,26 @@ export function SessionFormModal({ open, onOpenChange, session, onSave }: Sessio
         if (period === "AM" && h === 12) h = 0;
         return `${h.toString().padStart(2, "0")}:${minutes}`;
       });
+
       setFormData({
-        name: session.name,
-        trainer: session.trainer,
-        category: session.category,
+        description: session.description,
+        trainer_name: session.trainer_name || firstTrainer,
+        category_name: session.category_name,
         startTime,
         endTime,
-        location: session.location,
         capacity: session.capacity,
       });
     } else {
       setFormData({
-        name: "",
-        trainer: trainers[0].name,
-        category: "Yoga",
+        description: "",
+        trainer_name: firstTrainer,
+        category_name: "Yoga",
         startTime: "09:00",
         endTime: "10:00",
-        location: "Studio A",
         capacity: 20,
       });
     }
-  }, [session, open]);
+  }, [session, open, trainers]);
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(":");
@@ -103,20 +105,26 @@ export function SessionFormModal({ open, onOpenChange, session, onSave }: Sessio
   };
 
   const handleSubmit = () => {
-    const selectedTrainer = trainers.find((t) => t.name === formData.trainer) || trainers[0];
+    if (trainers.length === 0) {
+      alert("No trainers available. Please add a trainer first.");
+      return;
+    }
+
+    const selectedTrainer = trainers.find((t) => t.name === formData.trainer_name) || trainers[0];
+
     const newSession: SessionData = {
       id: session?.id || Date.now(),
-      name: formData.name,
-      trainer: formData.trainer,
-      trainerAvatar: selectedTrainer.avatar,
-      category: formData.category,
+      description: formData.description,
+      trainer_name: formData.trainer_name,
+      trainerAvatar: selectedTrainer?.photo || "",
+      category_name: formData.category_name,
       time: `${formatTime(formData.startTime)} - ${formatTime(formData.endTime)}`,
       date: "Today",
-      location: formData.location,
       capacity: formData.capacity,
       booked: session?.booked || 0,
       status: session?.status || "available",
     };
+
     onSave(newSession);
     onOpenChange(false);
   };
@@ -130,35 +138,48 @@ export function SessionFormModal({ open, onOpenChange, session, onSave }: Sessio
             {session ? "Update session details below." : "Fill in the details to create a new session."}
           </DialogDescription>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Session Name</Label>
+            <Label htmlFor="description">Session Description</Label>
             <Input
-              id="name"
+              id="description"
               placeholder="Morning Yoga Flow"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="trainer">Trainer</Label>
-              <Select value={formData.trainer} onValueChange={(v) => setFormData({ ...formData, trainer: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select trainer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {trainers.map((t) => (
-                    <SelectItem key={t.name} value={t.name}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="trainer_name">Trainer</Label>
+              {trainers.length > 0 ? (
+                <Select
+                  value={formData.trainer_name}
+                  onValueChange={(v) => setFormData({ ...formData, trainer_name: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select trainer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {trainers.map((t) => (
+                      <SelectItem key={t.id} value={t.name}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm text-red-500">No trainers available</p>
+              )}
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+              <Label htmlFor="category_name">Category</Label>
+              <Select
+                value={formData.category_name}
+                onValueChange={(v) => setFormData({ ...formData, category_name: v })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -172,6 +193,7 @@ export function SessionFormModal({ open, onOpenChange, session, onSave }: Sessio
               </Select>
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startTime">Start Time</Label>
@@ -182,6 +204,7 @@ export function SessionFormModal({ open, onOpenChange, session, onSave }: Sessio
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="endTime">End Time</Label>
               <Input
@@ -192,35 +215,22 @@ export function SessionFormModal({ open, onOpenChange, session, onSave }: Sessio
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Select value={formData.location} onValueChange={(v) => setFormData({ ...formData, location: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity</Label>
-              <Input
-                id="capacity"
-                type="number"
-                min={1}
-                max={100}
-                value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 20 })}
-              />
-            </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="capacity">Capacity</Label>
+            <Input
+              id="capacity"
+              type="number"
+              min={1}
+              max={100}
+              value={formData.capacity}
+              onChange={(e) =>
+                setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })
+              }
+            />
           </div>
         </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel

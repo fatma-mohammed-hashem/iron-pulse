@@ -1,14 +1,14 @@
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { 
-  ArrowLeft, 
-  Check, 
-  X, 
-  Dumbbell, 
-  Users, 
+import {
+  ArrowLeft,
+  Check,
+  X,
+  Dumbbell,
+  Users,
   Calendar,
   Zap,
   Clock,
-  Shield
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePlans } from "@/contexts/PlansContext";
@@ -19,14 +19,16 @@ const PlanDetails = () => {
   const navigate = useNavigate();
   const { getPlanById } = usePlans();
   const { isLoggedIn } = useUser();
-  
+
   const plan = getPlanById(Number(id));
 
   if (!plan) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Plan Not Found</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-4">
+            Plan Not Found
+          </h1>
           <Link to="/">
             <Button>Back to Home</Button>
           </Link>
@@ -64,11 +66,13 @@ const PlanDetails = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to Plans
           </Link>
-          
+
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-foreground">{plan.name} Plan</h1>
+                <h1 className="text-3xl font-bold text-foreground">
+                  {plan.name} Plan
+                </h1>
                 {plan.popular && (
                   <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1">
                     <Zap className="w-3 h-3" />
@@ -80,7 +84,9 @@ const PlanDetails = () => {
             </div>
             <div className="text-left md:text-right">
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-primary glow-text">${plan.price}</span>
+                <span className="text-4xl font-bold text-primary glow-text">
+                  ${plan.price}
+                </span>
                 <span className="text-muted-foreground">/{plan.period}</span>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
@@ -97,7 +103,9 @@ const PlanDetails = () => {
           {/* Features */}
           <div className="lg:col-span-2 space-y-8">
             <div className="stat-card card-glow">
-              <h2 className="text-xl font-bold text-foreground mb-6">Plan Features</h2>
+              <h2 className="text-xl font-bold text-foreground mb-6">
+                Plan Features
+              </h2>
               <div className="space-y-4">
                 {plan.features.map((feature, index) => (
                   <div
@@ -117,7 +125,9 @@ const PlanDetails = () => {
                     )}
                     <span
                       className={`${
-                        feature.included ? "text-foreground" : "text-muted-foreground"
+                        feature.included
+                          ? "text-foreground"
+                          : "text-muted-foreground"
                       }`}
                     >
                       {feature.name}
@@ -128,14 +138,18 @@ const PlanDetails = () => {
             </div>
 
             <div className="stat-card card-glow">
-              <h2 className="text-xl font-bold text-foreground mb-6">What's Included</h2>
+              <h2 className="text-xl font-bold text-foreground mb-6">
+                What's Included
+              </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {benefits.map((benefit, index) => (
                   <div key={index} className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
                       <benefit.icon className="w-5 h-5 text-primary" />
                     </div>
-                    <span className="text-foreground text-sm">{benefit.text}</span>
+                    <span className="text-foreground text-sm">
+                      {benefit.text}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -145,25 +159,35 @@ const PlanDetails = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             <div className="stat-card card-glow sticky top-24">
-              <h3 className="text-lg font-bold text-foreground mb-4">Order Summary</h3>
-              
+              <h3 className="text-lg font-bold text-foreground mb-4">
+                Order Summary
+              </h3>
+
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Plan</span>
-                  <span className="text-foreground font-medium">{plan.name}</span>
+                  <span className="text-foreground font-medium">
+                    {plan.name}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Duration</span>
-                  <span className="text-foreground">{plan.duration} month{plan.duration > 1 ? "s" : ""}</span>
+                  <span className="text-foreground">
+                    {plan.duration} month{plan.duration > 1 ? "s" : ""}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Price</span>
-                  <span className="text-foreground">${plan.price}/{plan.period}</span>
+                  <span className="text-foreground">
+                    ${plan.price}/{plan.period}
+                  </span>
                 </div>
                 <div className="border-t border-border pt-3">
                   <div className="flex justify-between">
                     <span className="text-foreground font-bold">Total</span>
-                    <span className="text-primary font-bold text-xl">${plan.price}</span>
+                    <span className="text-primary font-bold text-xl">
+                      ${plan.price}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -185,7 +209,10 @@ const PlanDetails = () => {
               <div className="flex items-center gap-3">
                 <Users className="w-5 h-5 text-primary" />
                 <span className="text-muted-foreground">
-                  <strong className="text-foreground">{plan.activeMembers}</strong> members on this plan
+                  <strong className="text-foreground">
+                    {plan.activeMembers}
+                  </strong>{" "}
+                  members on this plan
                 </span>
               </div>
             </div>
