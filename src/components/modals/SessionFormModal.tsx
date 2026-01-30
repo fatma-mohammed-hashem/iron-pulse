@@ -18,214 +18,245 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export interface SessionData {
+/* ================= TYPES ================= */
+
+export interface Trainer {
   id: number;
   name: string;
-  trainer: string;
-  trainerAvatar: string;
-  category: string;
-  time: string;
-  date: string;
-  location: string;
+  photo?: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+}
+
+export interface SessionFormData {
+  id?: number;
+  name: string;
+  trainer_id: number;
+  category_id: number;
+  start_date: string;
+  end_date: string;
   capacity: number;
-  booked: number;
-  status: "upcoming" | "full" | "available";
+  status?: "upcoming" | "ongoing" | "completed";
+  trainer_name?: string;
+  trainerPhoto?: string;
+  category_name?: string;
+  booked?: number;
 }
 
 interface SessionFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  session?: SessionData | null;
-  onSave: (session: SessionData) => void;
+  session?: SessionFormData | null;
+  trainers: Trainer[];
+  categories: Category[];
+  onSave: (data: SessionFormData) => void;
 }
 
-const trainers = [
-  { name: "Marcus Williams", avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop" },
-  { name: "Alexandra Kim", avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop" },
-  { name: "Jordan Mitchell", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" },
-  { name: "Emma Rodriguez", avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop" },
-  { name: "Sophia Lee", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" },
-];
+/* ================= COMPONENT ================= */
 
-const categories = ["Yoga", "HIIT", "Strength", "Cardio", "Dance", "Boxing", "Spinning", "Pilates"];
-const locations = ["Studio A", "Studio B", "Main Floor", "Weight Room", "Spin Room", "Combat Zone"];
-
-export function SessionFormModal({ open, onOpenChange, session, onSave }: SessionFormModalProps) {
+export function SessionFormModal({
+  open,
+  onOpenChange,
+  session,
+  trainers,
+  categories,
+  onSave,
+}: SessionFormModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    trainer: trainers[0].name,
-    category: "Yoga",
+    trainer_id: 0,
+    category_id: 0,
     startTime: "09:00",
     endTime: "10:00",
-    location: "Studio A",
-    capacity: 20,
+    capacity: 10,
   });
 
+  /* ===== Helpers ===== */
+  const toTime = (dateStr?: string) => dateStr?.slice(11, 16) || "09:00";
+  const getDatePart = (dateStr?: string) =>
+    dateStr?.slice(0, 10) || new Date().toISOString().slice(0, 10);
+  const combineDateTime = (date: string, time: string) =>
+    `${date} ${time}:00`;
+
+  /* ===== Fill form when editing ===== */
   useEffect(() => {
     if (session) {
-      const [startTime, endTime] = session.time.split(" - ").map((t) => {
-        const [time, period] = t.split(" ");
-        const [hours, minutes] = time.split(":");
-        let h = parseInt(hours);
-        if (period === "PM" && h !== 12) h += 12;
-        if (period === "AM" && h === 12) h = 0;
-        return `${h.toString().padStart(2, "0")}:${minutes}`;
-      });
       setFormData({
         name: session.name,
-        trainer: session.trainer,
-        category: session.category,
-        startTime,
-        endTime,
-        location: session.location,
+        trainer_id: session.trainer_id,
+        category_id: session.category_id,
+        startTime: toTime(session.start_date),
+        endTime: toTime(session.end_date),
         capacity: session.capacity,
       });
     } else {
       setFormData({
         name: "",
-        trainer: trainers[0].name,
-        category: "Yoga",
+        trainer_id: trainers[0]?.id || 0,
+        category_id: categories[0]?.id || 0,
         startTime: "09:00",
         endTime: "10:00",
-        location: "Studio A",
-        capacity: 20,
+        capacity: 10,
       });
     }
-  }, [session, open]);
+  }, [session, open, trainers, categories]);
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(":");
-    let h = parseInt(hours);
-    const period = h >= 12 ? "PM" : "AM";
-    if (h > 12) h -= 12;
-    if (h === 0) h = 12;
-    return `${h.toString().padStart(2, "0")}:${minutes} ${period}`;
-  };
-
+  /* ===== Submit ===== */
   const handleSubmit = () => {
-    const selectedTrainer = trainers.find((t) => t.name === formData.trainer) || trainers[0];
-    const newSession: SessionData = {
-      id: session?.id || Date.now(),
+    if (!formData.name.trim()) {
+      alert("Session name is required");
+      return;
+    }
+
+    if (formData.endTime <= formData.startTime) {
+      alert("End time must be after start time");
+      return;
+    }
+
+    const capacity = Math.min(Math.max(formData.capacity, 1), 25);
+
+    const baseDate = getDatePart(session?.start_date); // 👈 تاريخ قديم أو تاريخ النهارده
+
+    const payload: SessionFormData = {
+      id: session?.id,
       name: formData.name,
-      trainer: formData.trainer,
-      trainerAvatar: selectedTrainer.avatar,
-      category: formData.category,
-      time: `${formatTime(formData.startTime)} - ${formatTime(formData.endTime)}`,
-      date: "Today",
-      location: formData.location,
-      capacity: formData.capacity,
-      booked: session?.booked || 0,
-      status: session?.status || "available",
+      trainer_id: formData.trainer_id,
+      category_id: formData.category_id,
+      start_date: combineDateTime(baseDate, formData.startTime),
+      end_date: combineDateTime(baseDate, formData.endTime),
+      capacity,
+      status: session?.status ?? "upcoming",
     };
-    onSave(newSession);
+
+    onSave(payload);
     onOpenChange(false);
   };
 
+  /* ================= UI ================= */
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>{session ? "Edit Session" : "Create New Session"}</DialogTitle>
+          <DialogTitle>
+            {session ? "Edit Session" : "Create Session"}
+          </DialogTitle>
           <DialogDescription>
-            {session ? "Update session details below." : "Fill in the details to create a new session."}
+            {session
+              ? "Update session details below."
+              : "Fill in the details to create a new session."}
           </DialogDescription>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
+          {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name">Session Name</Label>
             <Input
               id="name"
-              placeholder="Morning Yoga Flow"
+              placeholder="Morning Yoga"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
             />
           </div>
+
+          {/* Trainer + Category */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="trainer">Trainer</Label>
-              <Select value={formData.trainer} onValueChange={(v) => setFormData({ ...formData, trainer: v })}>
+              <Label>Trainer</Label>
+              <Select
+                value={String(formData.trainer_id)}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, trainer_id: Number(v) })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select trainer" />
                 </SelectTrigger>
                 <SelectContent>
                   {trainers.map((t) => (
-                    <SelectItem key={t.name} value={t.name}>
+                    <SelectItem key={t.id} value={String(t.id)}>
                       {t.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+              <Label>Category</Label>
+              <Select
+                value={String(formData.category_id)}
+                onValueChange={(v) =>
+                  setFormData({ ...formData, category_id: Number(v) })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* Time */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startTime">Start Time</Label>
+              <Label>Start Time</Label>
               <Input
-                id="startTime"
                 type="time"
                 value={formData.startTime}
-                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, startTime: e.target.value })
+                }
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="endTime">End Time</Label>
+              <Label>End Time</Label>
               <Input
-                id="endTime"
                 type="time"
                 value={formData.endTime}
-                onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, endTime: e.target.value })
+                }
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Select value={formData.location} onValueChange={(v) => setFormData({ ...formData, location: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity</Label>
-              <Input
-                id="capacity"
-                type="number"
-                min={1}
-                max={100}
-                value={formData.capacity}
-                onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 20 })}
-              />
-            </div>
+
+          {/* Capacity */}
+          <div className="space-y-2">
+            <Label>Capacity</Label>
+            <Input
+              type="number"
+              min={1}
+              max={25}
+              value={formData.capacity}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  capacity: Number(e.target.value) || 1,
+                })
+              }
+            />
           </div>
         </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="bg-primary text-primary-foreground">
+          <Button onClick={handleSubmit}>
             {session ? "Save Changes" : "Create Session"}
           </Button>
         </DialogFooter>

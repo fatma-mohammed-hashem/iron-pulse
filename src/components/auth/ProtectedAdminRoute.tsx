@@ -1,27 +1,19 @@
 import { Navigate } from "react-router-dom";
+import { ReactNode } from "react";
 import { useUser } from "@/contexts/UserContext";
 
-interface ProtectedAdminRouteProps {
-  children: React.ReactNode;
+interface Props {
+  children: ReactNode;
 }
 
-/**
- * Protected route component for Admin-only pages.
- * Redirects non-admin users to the landing page.
- * TODO: Backend integration - verify admin role via API/token validation
- */
-const ProtectedAdminRoute = ({ children }: ProtectedAdminRouteProps) => {
-  const { isLoggedIn, isAdmin } = useUser();
+const ProtectedAdminRoute = ({ children }: Props) => {
+  const { loading, isLoggedIn, isAdmin } = useUser();
 
-  // If not logged in, redirect to login page
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
+  if (loading) return <div>Loading...</div>;
 
-  // If logged in but not admin, redirect to landing page
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
-  }
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+
+  if (!isAdmin) return <Navigate to="/" replace />;
 
   return <>{children}</>;
 };

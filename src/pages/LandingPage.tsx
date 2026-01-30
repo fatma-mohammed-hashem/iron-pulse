@@ -1,3 +1,4 @@
+import { api } from "@/api/axios";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Dumbbell,
@@ -18,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePlans } from "@/contexts/PlansContext";
 import { useUser } from "@/contexts/UserContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,18 +32,37 @@ import { LogoutConfirmModal } from "@/components/modals/LogoutConfirmModal";
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { plans } = usePlans();
+  const [plans, setPlans] = useState([]);
+  const [trainers, setTrainers] = useState([]);
   const { user, isLoggedIn, isSubscribed, isAdmin, logout } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  const activePlans = plans.filter((plan) => plan.status === "active");
 
   const handleLogout = () => {
     logout();
     setShowLogoutModal(false);
     navigate("/");
   };
+
+  // API
+  useEffect(() => {
+    api
+      .get("/trainers")
+      .then((res) => {
+        const trainersArray = Array.isArray(res.data)
+          ? res.data
+          : res.data.data;
+        setTrainers(trainersArray || []);
+      })
+      .catch(() => setTrainers([]));
+  }, []);
+
+  useEffect(() => {
+    api
+      .get("/plans")
+      .then((res) => setPlans(res.data))
+      .catch(() => setPlans([]));
+  }, []);
 
   const getInitials = (name: string) => {
     return name
@@ -102,7 +122,7 @@ const LandingPage = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
-               <a
+              <a
                 href="#home"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -144,7 +164,7 @@ const LandingPage = () => {
                       className="flex items-center gap-2 p-1 pr-3"
                     >
                       <Avatar className="w-8 h-8">
-                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                        {/* <AvatarImage src={user?.avatar} alt={user?.name} /> */}
                         <AvatarFallback className="bg-primary/20 text-primary text-sm">
                           {getInitials(user?.name || "U")}
                         </AvatarFallback>
@@ -234,7 +254,7 @@ const LandingPage = () => {
               >
                 Features
               </a>
-              
+
               <a
                 href="#plans"
                 className="block text-muted-foreground hover:text-foreground"
@@ -261,7 +281,7 @@ const LandingPage = () => {
                   <>
                     <div className="flex items-center gap-3 py-2">
                       <Avatar className="w-10 h-10">
-                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                        {/* <AvatarImage src={user?.avatar} alt={user?.name} /> */}
                         <AvatarFallback className="bg-primary/20 text-primary">
                           {getInitials(user?.name || "U")}
                         </AvatarFallback>
@@ -355,9 +375,13 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section
         id="home"
-        className="pt-32 pb-20 relative overflow-hidden bg-cover bg-center"
+        className="pt-32 pb-20 relative overflow-hidden min-h-screen flex items-center bg-cover bg-center"
         style={{
           backgroundImage: "url('/images/gym-option-1.jpg')",
+          animation: "moveBg 10s ease-in-out infinite",
+          backgroundSize: "120%",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "0% 120%",
         }}
       >
         <div className="absolute inset-0 bg-black/60" />
@@ -374,7 +398,7 @@ const LandingPage = () => {
               modern equipment, and powerful workouts.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center  gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
               <a href="#plans">
                 <Button
                   size="lg"
@@ -394,6 +418,22 @@ const LandingPage = () => {
         </div>
       </section>
 
+      <style>{`
+  @keyframes moveBg {
+    0% {
+      background-image: url('./images/gym-option-3.jpg');
+      background-position: 0% 50%;
+    }
+    50% {
+      background-image: url('./images/gym-option-1.jpg');
+      background-position: 100% 50%;
+    }
+    100% {
+      background-image: url('./images/gym-option-3.jpg');
+      background-position: 0% 50%;
+    }
+  }`}</style>
+
       {/* Stats Section */}
       <section
         id="stats"
@@ -412,9 +452,6 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
-
-
-
 
       {/* Features Section */}
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
@@ -448,96 +485,50 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Trainers Section */}
+      <section id="trainers" className="py-24 bg-background text-foreground">
+        <div className="container mx-auto px-6">
+          {/* Title */}
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-[hsl(142_60%_40%)] mb-4">
+              Our Trainers
+            </h2>
+            <p className="text-muted-foreground">
+              Meet our professional trainers who will help you reach your
+              fitness goals.
+            </p>
+          </div>
 
- {/* Trainers Section */}
-<section
-  id="trainers"
-  className="py-24 bg-background text-foreground"
->
-  <div className="container mx-auto px-6">
+          {/* Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Trainer Card */}
 
-    {/* Title */}
-    <div className="text-center max-w-2xl mx-auto mb-16">
-      <h2 className="text-4xl md:text-5xl font-bold text-[hsl(142_60%_40%)] mb-4">
-        Our Trainers
-      </h2>
-      <p className="text-muted-foreground">
-        Meet our professional trainers who will help you reach your fitness goals.
-      </p>
-    </div>
+            {trainers.slice(0, 3).map((trainer) => (
+              <div
+                key={trainer.id}
+                className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition"
+              >
+                <img
+                  src={trainer.photo}
+                  alt={trainer.name}
+                  className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
+                />
 
-    {/* Cards */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <h3 className="text-xl font-semibold text-foreground">
+                  {trainer.name}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  {trainer.specialties}
+                </p>
+                <Link to={`trainers/${trainer.id}`}>
+                  <Button className="w-full">View Profile</Button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      {/* Trainer Card */}
-      <div className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition">
-        <img
-          src="/images/trainer-man-2.jpg"
-          alt="Ahmed Ali"
-          className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
-        />
-
-        <h3 className="text-xl font-semibold text-foreground">
-          Ahmed Ali
-        </h3>
-        <p className="text-sm text-muted-foreground mb-3">
-          Strength Coach
-        </p>
-
-        <p className="text-sm text-muted-foreground mb-6">
-          Specialized in muscle building and strength training programs.
-        </p>
-
-        <Button className="w-full">View Profile</Button>
-      </div>
-
-      {/* Trainer Card */}
-      <div className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition">
-        <img
-          src="/images/trainer-woman.jpg"
-          alt="Sara Mohamed"
-          className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
-        />
-
-        <h3 className="text-xl font-semibold text-foreground">
-          Sara Mohamed
-        </h3>
-        <p className="text-sm text-muted-foreground mb-3">
-          Cardio Trainer
-        </p>
-
-        <p className="text-sm text-muted-foreground mb-6">
-          Focused on weight loss and cardio endurance programs.
-        </p>
-
-        <Button className="w-full">View Profile</Button>
-      </div>
-
-      {/* Trainer Card */}
-      <div className="bg-surface border border-border rounded-2xl p-6 text-center hover:border-primary transition">
-        <img
-          src="/images/trainer-man-2.jpg"
-          alt="Omar Hassan"
-          className="w-32 h-32 mx-auto rounded-full object-cover mb-4"
-        />
-
-        <h3 className="text-xl font-semibold text-foreground">
-          Omar Hassan
-        </h3>
-        <p className="text-sm text-muted-foreground mb-3">
-          CrossFit Trainer
-        </p>
-
-        <p className="text-sm text-muted-foreground mb-6">
-          Expert in high-intensity functional training.
-        </p>
-
-        <Button className="w-full">View Profile</Button>
-      </div>
-
-    </div>
-  </div>
-</section>
       {/* Plans Section */}
       <section
         id="plans"
@@ -552,24 +543,26 @@ const LandingPage = () => {
               Choose the perfect plan that fits your fitness goals and budget
             </p>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {activePlans.map((plan) => (
-              <div
+            {plans.map((plan) => (
+              <article
                 key={plan.id}
-                className={`stat-card card-glow relative ${
-                  plan.popular ? "ring-2 ring-primary" : ""
-                }`}
+                className={`relative rounded-2xl border border-border bg-background p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl`}
+                aria-label={`${plan.name} plan`}
               >
+                {/* Popular Badge */}
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                    <span className="px-4 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1 shadow-md">
                       <Zap className="w-3 h-3" />
                       Most Popular
                     </span>
                   </div>
                 )}
 
-                <div className="mb-4">
+                {/* Header */}
+                <div className="mb-4 text-center">
                   <h3 className="text-xl font-bold text-foreground">
                     {plan.name}
                   </h3>
@@ -578,20 +571,22 @@ const LandingPage = () => {
                   </p>
                 </div>
 
-                <div className="mb-6">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-foreground">
+                {/* Price */}
+                <div className="mb-6 text-center">
+                  <div className="flex justify-center items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-foreground">
                       ${plan.price}
                     </span>
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground text-sm">
                       /{plan.period}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-2 mb-6">
+                {/* Features */}
+                <ul className="space-y-2 mb-6">
                   {plan.features.slice(0, 4).map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
+                    <li key={idx} className="flex items-center gap-2">
                       {feature.included ? (
                         <Check className="w-4 h-4 text-primary flex-shrink-0" />
                       ) : (
@@ -601,31 +596,34 @@ const LandingPage = () => {
                         className={`text-sm ${
                           feature.included
                             ? "text-foreground"
-                            : "text-muted-foreground"
+                            : "text-muted-foreground line-through"
                         }`}
                       >
                         {feature.name}
                       </span>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
 
+                {/* CTA */}
                 <Link to={`/plan/${plan.id}`}>
                   <Button
-                    className={`w-full ${
+                    className={`w-full transition-all ${
                       plan.popular
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg"
                         : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                     }`}
                   >
-                    Plan Details
+                    View Plan
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
-              </div>
+              </article>
             ))}
           </div>
-          {activePlans.length === 0 && (
+
+          {/* Empty State */}
+          {plans.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
                 No plans available at the moment.

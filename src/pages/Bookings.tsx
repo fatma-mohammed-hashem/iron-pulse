@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { api } from "@/api/axios";
+import { useState, useEffect } from "react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+} from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,108 +21,36 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const bookings = [
-  {
-    id: 1,
-    member: {
-      name: "Sarah Johnson",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-    },
-    session: "Morning Yoga Flow",
-    trainer: "Alexandra Kim",
-    date: "Dec 27, 2024",
-    time: "06:00 AM",
-    location: "Studio A",
-    attendance: "attended" as const,
-  },
-  {
-    id: 2,
-    member: {
-      name: "Michael Chen",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
-    },
-    session: "HIIT Blast",
-    trainer: "Marcus Williams",
-    date: "Dec 27, 2024",
-    time: "08:00 AM",
-    location: "Main Floor",
-    attendance: "pending" as const,
-  },
-  {
-    id: 3,
-    member: {
-      name: "Emily Rodriguez",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
-    },
-    session: "Strength & Conditioning",
-    trainer: "Marcus Williams",
-    date: "Dec 27, 2024",
-    time: "10:00 AM",
-    location: "Weight Room",
-    attendance: "pending" as const,
-  },
-  {
-    id: 4,
-    member: {
-      name: "David Park",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop",
-    },
-    session: "Spin Class",
-    trainer: "Sophia Lee",
-    date: "Dec 26, 2024",
-    time: "12:00 PM",
-    location: "Spin Room",
-    attendance: "attended" as const,
-  },
-  {
-    id: 5,
-    member: {
-      name: "Jessica Williams",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop",
-    },
-    session: "Zumba Party",
-    trainer: "Emma Rodriguez",
-    date: "Dec 26, 2024",
-    time: "05:00 PM",
-    location: "Studio B",
-    attendance: "missed" as const,
-  },
-  {
-    id: 6,
-    member: {
-      name: "Ryan Thompson",
-      avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop",
-    },
-    session: "Boxing Fundamentals",
-    trainer: "Jordan Mitchell",
-    date: "Dec 25, 2024",
-    time: "07:00 PM",
-    location: "Combat Zone",
-    attendance: "attended" as const,
-  },
-];
-
 const Bookings = () => {
-  const getAttendanceIcon = (attendance: string) => {
-    switch (attendance) {
-      case "attended":
-        return <CheckCircle className="w-5 h-5 text-success" />;
-      case "missed":
-        return <XCircle className="w-5 h-5 text-destructive" />;
-      default:
-        return <AlertCircle className="w-5 h-5 text-warning" />;
-    }
+  const [bookings, setBookings] = useState<any[]>([]);
+
+  useEffect(() => {
+    api
+      .get("/bookings")
+      .then((res) => {
+        const bookingsArray = Array.isArray(res.data) ? res.data : res.data.data;
+        setBookings(bookingsArray || []);
+      })
+      .catch(() => setBookings([]));
+  }, []);
+
+  // دوال تحويل is_attended لـ UI
+  const getAttendanceIcon = (is_attended: boolean | null) => {
+    if (is_attended === true) return <CheckCircle className="w-5 h-5 text-success" />;
+    if (is_attended === false) return <XCircle className="w-5 h-5 text-destructive" />;
+    return <AlertCircle className="w-5 h-5 text-warning" />;
   };
 
-  const getAttendanceStatus = (attendance: string) => {
-    switch (attendance) {
-      case "attended":
-        return "active" as const;
-      case "missed":
-        return "expired" as const;
-      default:
-        return "pending" as const;
-    }
+  const getAttendanceStatus = (is_attended: boolean | null) => {
+    if (is_attended === true) return "active" as const;
+    if (is_attended === false) return "expired" as const;
+    return "pending" as const;
+  };
+
+  const getAttendanceLabel = (is_attended: boolean | null) => {
+    if (is_attended === true) return "Attended";
+    if (is_attended === false) return "Missed";
+    return "Pending";
   };
 
   return (
@@ -178,6 +114,7 @@ const Bookings = () => {
             <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
             <TabsTrigger value="past">Past</TabsTrigger>
           </TabsList>
+
           <div className="flex gap-2 ml-auto">
             <Select>
               <SelectTrigger className="w-[160px] bg-card">
@@ -204,31 +141,19 @@ const Bookings = () => {
           </div>
         </div>
 
+        {/* All Bookings Table */}
         <TabsContent value="all">
-          {/* Bookings Table */}
           <div className="stat-card card-glow overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Member
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Session
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Date & Time
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Location
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Attendance
-                    </th>
-                    <th className="text-right py-4 px-4 text-sm font-medium text-muted-foreground">
-                      Actions
-                    </th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Member</th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Session</th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Date & Time</th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Location</th>
+                    <th className="text-left py-4 px-4 text-sm font-medium text-muted-foreground">Attendance</th>
+                    <th className="text-right py-4 px-4 text-sm font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -241,7 +166,7 @@ const Bookings = () => {
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 border-2 border-border">
-                            <AvatarImage src={booking.member.avatar} />
+                            <AvatarImage src={booking.member.photo} />
                             <AvatarFallback className="bg-primary text-primary-foreground">
                               {booking.member.name
                                 .split(" ")
@@ -249,47 +174,44 @@ const Bookings = () => {
                                 .join("")}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium text-foreground">
-                            {booking.member.name}
-                          </span>
+                          <span className="font-medium text-foreground">{booking.member.name}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div>
-                          <p className="font-medium text-foreground">{booking.session}</p>
-                          <p className="text-sm text-muted-foreground">{booking.trainer}</p>
+                          <p className="font-medium text-foreground">{booking.session.name}</p>
+                          <p className="text-sm text-muted-foreground">{booking.session.trainer.name}</p>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2 text-sm text-foreground">
                             <Calendar className="w-3 h-3" />
-                            {booking.date}
+                            {booking.booking_date.split(" ")[0]}
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock className="w-3 h-3" />
-                            {booking.time}
+                            {booking.booking_date.split(" ")[1]}
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="w-3 h-3" />
-                          {booking.location}
+                          Gym Location
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-2">
-                          {getAttendanceIcon(booking.attendance)}
-                          <StatusBadge variant={getAttendanceStatus(booking.attendance)}>
-                            {booking.attendance.charAt(0).toUpperCase() +
-                              booking.attendance.slice(1)}
+                          {getAttendanceIcon(booking.is_attended)}
+                          <StatusBadge variant={getAttendanceStatus(booking.is_attended)}>
+                            {getAttendanceLabel(booking.is_attended)}
                           </StatusBadge>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center justify-end gap-2">
-                          {booking.attendance === "pending" && (
+                          {booking.is_attended === null && (
                             <>
                               <Button
                                 size="sm"
@@ -307,7 +229,7 @@ const Bookings = () => {
                               </Button>
                             </>
                           )}
-                          {booking.attendance !== "pending" && (
+                          {booking.is_attended !== null && (
                             <Button size="sm" variant="outline" className="h-8 px-3">
                               View Details
                             </Button>
@@ -322,6 +244,7 @@ const Bookings = () => {
           </div>
         </TabsContent>
 
+        {/* Empty Tabs */}
         <TabsContent value="today">
           <div className="stat-card card-glow text-center py-12">
             <p className="text-muted-foreground">Today's bookings will appear here</p>

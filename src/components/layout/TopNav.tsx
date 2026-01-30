@@ -41,12 +41,12 @@ export function TopNav() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-3 px-2 hover:bg-secondary">
-                <Avatar className="h-9 w-9 border-2 border-primary/30">
+                {/* <Avatar className="h-9 w-9 border-2 border-primary/30">
                   <AvatarImage src={profile.avatar} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {profile.firstName[0]}{profile.lastName[0]}
                   </AvatarFallback>
-                </Avatar>
+                </Avatar> */}
                 <div className="hidden md:flex flex-col items-start">
                   <span className="text-sm font-medium text-foreground">{profile.firstName} {profile.lastName}</span>
                   <span className="text-xs text-muted-foreground">{profile.role}</span>
